@@ -41,7 +41,7 @@ def process_song_data(spark, input_data, output_data):
                            .dropDuplicates(subset=['song_id']) 
     
     # write songs table to parquet files partitioned by year and artist
-    songs_table.write.partitionBy('year',                                         'artist_id').parquet(os.path.join(output_data, 'songs'))
+    songs_table.write.partitionBy('year','artist_id').parquet(os.path.join(output_data, 'songs'))
 
     # extract columns to create artists table
     artists_table = df.select('artist_id',
@@ -81,7 +81,7 @@ def process_log_data(spark, input_data, output_data):
 
     # create timestamp column from original timestamp column
    # get_timestamp = udf()
-    df = df.withColumn('start_time',(                                              (df.ts.cast('float')/1000).cast("timestamp")) )
+    df = df.withColumn('start_time',((df.ts.cast('float')/1000).cast("timestamp")) )
     
     # create datetime column from original timestamp column
    # get_datetime = udf()
@@ -99,15 +99,15 @@ def process_log_data(spark, input_data, output_data):
                                
     
     # write time table to parquet files partitioned by year and month
-    time_table.write.partitionBy('year',                                            'month').parquet(os.path.join(output_data,'time'))
+    time_table.write.partitionBy('year','month').parquet(os.path.join(output_data,'time'))
 
     # read in song data to use for songplays table
-    song_df = spark.read.json(os.path.join(input_data,                                  'song_data/*/*/*/*.json'))
+    song_df = spark.read.json(os.path.join(input_data,'song_data/*/*/*/*.json'))
 
     # extract columns from joined song and log datasets to create songplays table 
     song_df.createOrReplaceTempView("temp_songs")
     df.createOrReplaceTempView("temp_logs")
-    songplays_table = spark.sql("""SELECT monotonically_increasing_id()                                     as songplay_id,
+    songplays_table = spark.sql("""SELECT monotonically_increasing_id() as songplay_id,
                                     start_time as start_time,
                                     year(start_time) as year,
                                     month(start_time) as month,
@@ -119,11 +119,11 @@ def process_log_data(spark, input_data, output_data):
                                     location,
                                     userAgent
                                     from temp_songs
-                                    join temp_logs on                                                       temp_logs.artist =                                                     temp_songs.artist_name
-                                    and temp_logs.page  =                                                  'NextSong'""")
+                                    join temp_logs on temp_logs.artist = temp_songs.artist_name
+                                    and temp_logs.page ='NextSong'""")
  
     # write songplays table to parquet files partitioned by year and month
-    songplays_table.write.partitionBy('year',                                      'month').parquet(os.path.join(output_data,'songplays'))
+    songplays_table.write.partitionBy('year','month').parquet(os.path.join(output_data,'songplays'))
 
 
 def main():
